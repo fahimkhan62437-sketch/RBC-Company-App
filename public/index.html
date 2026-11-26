@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123f91">
+<title>RBC Company</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><div class="brand"><div class="logo">RBC</div><div><b id="companyTitle">RBC Company</b><small>سیستم مدیریت فروش و حسابداری</small></div></div><span id="serverState" class="pill">متصل</span></header>
+<nav id="nav">
+<button class="active" data-page="home">داشبورد</button><button data-page="customers">مشتریان</button><button data-page="products">اجناس</button><button data-page="invoices">فاکتورها</button><button data-page="payments">دریافت پول</button><button data-page="settings">تنظیمات و پشتیبان</button>
+</nav>
+<main>
+<section id="home" class="page active"><h1>داشبورد</h1><div class="cards" id="stats"></div><div class="panel"><h3>خلاصه سیستم</h3><p>از منوی بالا برای ثبت مشتری، جنس، فاکتور و پرداخت استفاده کنید.</p></div></section>
+
+<section id="customers" class="page"><div class="heading"><h1>مشتریان</h1><button class="primary" id="newCustomer">+ مشتری جدید</button></div>
+<div class="panel"><input id="customerSearch" placeholder="جست‌وجوی نام یا شماره تماس"><div id="customerList"></div></div>
+<div class="panel hidden" id="customerForm"><h3>ثبت / ویرایش مشتری</h3><input type="hidden" id="customerId"><div class="formgrid"><label>نام مشتری<input id="cName"></label><label>شماره تماس<input id="cPhone"></label><label>آدرس<input id="cAddress"></label><label>یادداشت<input id="cNote"></label></div><button class="primary" id="saveCustomer">ذخیره مشتری</button> <button class="secondary" data-close="customerForm">بستن</button></div>
+<div class="panel hidden" id="statement"></div></section>
+
+<section id="products" class="page"><div class="heading"><h1>اجناس و دسته‌بندی</h1><button class="primary" id="newProduct">+ جنس جدید</button></div>
+<div class="panel"><h3>افزودن دسته‌بندی</h3><div class="inline"><input id="categoryName" placeholder="نام دسته جدید"><button class="secondary" id="addCategory">ثبت دسته</button></div><div id="categoryList" class="chips"></div></div>
+<div class="panel hidden" id="productForm"><h3>ثبت / ویرایش جنس</h3><input type="hidden" id="productId"><div class="formgrid"><label>نام جنس<input id="pName"></label><label>کد محصول<input id="pCode"></label><label>دسته‌بندی<select id="pCategory"></select></label><label>واحد<input id="pUnit" value="عدد"></label><label>قیمت خرید<input id="pBuy" type="number" min="0"></label><label>قیمت فروش<input id="pSale" type="number" min="0"></label><label>موجودی<input id="pStock" type="number" min="0"></label></div><button class="primary" id="saveProduct">ذخیره جنس</button> <button class="secondary" data-close="productForm">بستن</button></div>
+<div class="panel" id="productList"></div></section>
+
+<section id="invoices" class="page"><div class="heading"><h1>فاکتورها</h1><button class="primary" id="newInvoice">+ صدور فاکتور</button></div>
+<div class="panel hidden" id="invoiceForm"><h3>فاکتور جدید</h3><div class="formgrid"><label>مشتری<select id="iCustomer"></select></label><label>تاریخ<input id="iDate" type="date"></label><label>تخفیف<input id="iDiscount" type="number" min="0" value="0"></label><label>پرداخت فعلی<input id="iPaid" type="number" min="0" value="0"></label></div><h3>اقلام فاکتور</h3><div class="inline"><select id="iProduct"></select><input id="iQty" type="number" min="0.01" step="any" value="1" placeholder="تعداد"><input id="iPrice" type="number" min="0" placeholder="قیمت واحد"><button class="secondary" id="addItem">افزودن</button></div><div id="draftItems"></div><label>یادداشت<textarea id="iNote"></textarea></label><div class="totals" id="draftTotals"></div><button class="primary" id="saveInvoice">ثبت فاکتور</button> <button class="secondary" data-close="invoiceForm">انصراف</button></div>
+<div class="panel" id="invoiceList"></div></section>
+
+<section id="payments" class="page"><h1>ثبت دریافت پول</h1><div class="panel"><div class="formgrid"><label>مشتری<select id="payCustomer"></select></label><label>فاکتور مربوطه<select id="payInvoice"><option value="">بدون اتصال به فاکتور</option></select></label><label>مبلغ دریافتی<input id="payAmount" type="number" min="0"></label><label>تاریخ<input id="payDate" type="date"></label><label>یادداشت<input id="payNote"></label></div><button class="primary" id="savePayment">ثبت پرداخت</button></div></section>
+
+<section id="settings" class="page"><h1>تنظیمات و پشتیبان‌گیری</h1><div class="panel"><h3>مشخصات شرکت و فاکتور</h3><div class="formgrid"><label>نام شرکت<input id="sCompany"></label><label>شماره تماس<input id="sPhone"></label><label>آدرس<input id="sAddress"></label><label>واحد پول<select id="sCurrency"><option value="AFN">افغانی (AFN)</option><option value="USD">دالر (USD)</option></select></label><label>پیشوند شماره فاکتور<input id="sPrefix"></label><label>شماره بعدی فاکتور<input id="sNext" type="number" min="1"></label></div><button class="primary" id="saveSettings">ذخیره تنظیمات</button></div>
+<div class="panel"><h3>پشتیبان‌گیری</h3><p>برنامه روزانه یک نسخه پشتیبان می‌سازد و ۱۵ نسخه آخر را نگه می‌دارد. برای پشتیبان فوری دکمه زیر را بزنید.</p><button class="primary" id="makeBackup">تهیه پشتیبان همین حالا</button><div id="backupList"></div><p class="hint">پشتیبان‌ها در پوشه RBC_Company_App_v2/backups ذخیره می‌شوند. برای امنیت بیشتر، هر چند وقت یک‌بار آن‌ها را به پوشه دیگری نیز کپی کنید.</p></div></section>
+</main>
+<div id="toast" role="status"></div>
+<script src="/app.js"></script>
+</body></html>
