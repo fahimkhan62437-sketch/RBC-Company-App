@@ -1,0 +1,19 @@
+name: Build RBC APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check project
+        run: |
+          ls -la
+          cat package.json
+
+      - name: Build information
+        run: echo "RBC project received successfully"
