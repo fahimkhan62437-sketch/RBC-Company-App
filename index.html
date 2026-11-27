@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RBC Company</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial;background:#f3f5f9;color:#202b3c}
+header{background:#102b50;color:white;padding:16px;text-align:center}
+nav{display:flex;overflow-x:auto;background:#173c68;padding:7px;gap:5px}
+nav button{white-space:nowrap;border:0;border-radius:6px;padding:10px;background:#28527e;color:white}
+nav button.active{background:white;color:#173c68}
+main{padding:12px;max-width:1100px;margin:auto}
+.page{display:none}.page.active{display:block}
+h3{color:#173c68}
+.card{background:white;border-radius:10px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #0000000c}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:white;padding:14px;border-radius:9px;border-right:4px solid #2365a5}
+.stat small{color:#68778a}.stat strong{display:block;font-size:19px;margin-top:8px;color:#173c68;overflow-wrap:anywhere}
+input,select,textarea{width:100%;padding:11px;border:1px solid #ccd5e0;border-radius:7px;margin:5px 0 12px;font-family:inherit}
+label{font-size:13px;font-weight:bold}
+button{cursor:pointer;font-family:inherit}
+.btn{border:0;border-radius:7px;padding:10px 14px;background:#1b5b98;color:white;margin:3px}
+.green{background:#16834d}.red{background:#c0392b}.gray{background:#68778a}.orange{background:#d77a16}
+.small{padding:6px 9px;font-size:12px}
+table{width:100%;border-collapse:collapse;background:white;font-size:13px}
+th,td{padding:10px 7px;border-bottom:1px solid #e6eaf0;text-align:right}
+th{background:#edf3f9;color:#173c68}
+.table-wrap{overflow-x:auto;margin-top:10px}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.empty{text-align:center;color:#8492a4;padding:20px}
+.notice{padding:10px;background:#eaf3ff;border-radius:7px;font-size:13px}
+.total{font-size:18px;font-weight:bold;color:#173c68}
+.product-row{border:1px solid #e1e6ed;border-radius:8px;padding:10px;margin:8px 0}
+footer{text-align:center;color:#8793a2;padding:20px;font-size:12px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media print{nav,header,.no-print,footer{display:none!important}body{background:white}main{padding:0}.page{display:none!important}#invoicePrint,#receiptPrint{display:block!important}}
+</style>
+</head>
+<body>
+
+<header>
+<h2 id="headerName">RBC Company</h2>
+<small>سیستم مدیریت فروش و حسابداری</small>
+</header>
+
+<nav class="no-print">
+<button class="active" onclick="showPage('home',this)">داشبورد</button>
+<button onclick="showPage('customers',this)">مشتریان</button>
+<button onclick="showPage('products',this)">اجناس</button>
+<button onclick="showPage('sales',this)">فروش جدید</button>
+<button onclick="showPage('ledger',this)">دفترکل</button>
+<button onclick="showPage('invoices',this)">فاکتورها</button>
+<button onclick="showPage('accounting',this)">حسابداری</button>
+<button onclick="showPage('expenses',this)">هزینه‌ها</button>
+<button onclick="showPage('reports',this)">گزارشات</button>
+<button onclick="showPage('settings',this)">تنظیمات</button>
+<button onclick="showPage('backup',this)">پشتیبان</button>
+</nav>
+
+<main>
+
+<section id="home" class="page active">
+<h3>داشبورد مالی</h3>
+<div class="grid">
+<div class="stat"><small>مجموع فروش</small><strong id="dSales">0</strong></div>
+<div class="stat"><small>مجموع دریافت</small><strong id="dPaid">0</strong></div>
+<div class="stat"><small>قرض مشتریان</small><strong id="dDebt">0</strong></div>
+<div class="stat"><small>سود ناخالص</small><strong id="dProfit">0</strong></div>
+<div class="stat"><small>هزینه‌ها</small><strong id="dExpenses">0</strong></div>
+<div class="stat"><small>سود خالص</small><strong id="dNet">0</strong></div>
+<div class="stat"><small>تعداد مشتریان</small><strong id="dCustomers">0</strong></div>
+<div class="stat"><small>تعداد اجناس</small><strong id="dProducts">0</strong></div>
+</div>
+<div class="card"><h3>آخرین فاکتورها</h3><div id="recentSales"></div></div>
+</section>
+
+<section id="customers" class="page">
+<h3>مدیریت مشتریان</h3>
+<div class="card">
+<input type="hidden" id="cId">
+<label>نام مشتری</label><input id="cName">
+<label>شماره تماس</label><input id="cPhone">
+<label>آدرس</label><input id="cAddress">
+<label>یادداشت</label><textarea id="cNote"></textarea>
+<button class="btn green" onclick="saveCustomer()">ذخیره مشتری</button>
+<button class="btn gray" onclick="clearCustomer()">پاک کردن فورم</button>
+</div>
+<input id="cSearch" placeholder="جستجوی مشتری..." oninput="renderCustomers()">
+<div class="card"><div id="customerList"></div></div>
+</section>
+
+<section id="products" class="page">
+<h3>مدیریت اجناس و انبار</h3>
+<div class="card">
+<input type="hidden" id="pId">
+<label>نام جنس</label><input id="pName">
+<label>دسته‌بندی</label><input id="pCategory">
+<label>قیمت خرید</label><input id="pBuy" type="number" min="0">
+<label>قیمت فروش</label><input id="pSell" type="number" min="0">
+<label>موجودی</label><input id="pStock" type="number" min="0">
+<button class="btn green" onclick="saveProduct()">ذخیره جنس</button>
+<button class="btn gray" onclick="clearProduct()">پاک کردن فورم</button>
+</div>
+<input id="pSearch" placeholder="جستجوی جنس..." oninput="renderProducts()">
+<div class="card"><div id="productList"></div></div>
+</section>
+  
+<section id="sales" class="page">
+<h3>ثبت فروش جدید</h3>
+<div class="card">
+<label>انتخاب مشتری</label><select id="saleCustomer"></select>
+<label>تاریخ فروش</label><input type="date" id="saleDate">
+<hr>
+<label>انتخاب جنس</label><select id="saleProduct"></select>
+<label>تعداد</label><input type="number" id="saleQty" min="1" value="1">
+<button class="btn" onclick="addSaleItem()">افزودن جنس</button>
+<div id="saleItems"></div>
+<hr>
+<label>تخفیف</label><input type="number" id="saleDiscount" min="0" value="0" oninput="renderSaleItems()">
+<label>مبلغ پرداخت‌شده</label><input type="number" id="salePaid" min="0" value="0">
+<div class="total" id="saleTotal">مجموع: 0</div>
+<button class="btn green" onclick="completeSale()">ثبت فروش و صدور فاکتور</button>
+</div>
+</section>
+
+<section id="ledger" class="page">
+<h3>دفترکل مشتریان</h3>
+<div class="card">
+<label>انتخاب مشتری</label><select id="ledgerCustomer" onchange="renderLedger()"></select>
+<div id="ledgerSummary"></div>
+</div>
+<div class="card">
+<h3>ثبت پرداخت</h3>
+<label>مبلغ پرداخت</label><input id="paymentAmount" type="number" min="0">
+<label>تاریخ</label><input id="paymentDate" type="date">
+<label>توضیحات</label><input id="paymentNote">
+<button class="btn green" onclick="addCustomerPayment()">ثبت پرداخت</button>
+</div>
+<div class="card"><div id="ledgerList"></div></div>
+</section>
+
+<section id="invoices" class="page">
+<h3>فاکتورها</h3>
+<input id="iSearch" placeholder="جستجوی فاکتور یا مشتری..." oninput="renderInvoices()">
+<div class="card"><div id="invoiceList"></div></div>
+</section>
+
+<section id="accounting" class="page">
+<h3>حسابداری عمومی</h3>
+<div class="grid">
+<div class="stat"><small>فروش</small><strong id="aSales">0</strong></div>
+<div class="stat"><small>دریافت</small><strong id="aPaid">0</strong></div>
+<div class="stat"><small>باقی‌داری</small><strong id="aDebt">0</strong></div>
+<div class="stat"><small>سود خالص</small><strong id="aNet">0</strong></div>
+</div>
+</section>
+
+<section id="expenses" class="page">
+<h3>مدیریت هزینه‌ها</h3>
+<div class="card">
+<input type="hidden" id="eId">
+<label>عنوان هزینه</label><input id="eName">
+<label>مبلغ</label><input id="eAmount" type="number" min="0">
+<label>دسته‌بندی</label><input id="eCategory">
+<label>تاریخ</label><input id="eDate" type="date">
+<button class="btn green" onclick="saveExpense()">ثبت هزینه</button>
+</div>
+<div class="card"><div id="expenseList"></div></div>
+</section>
+
+<section id="reports" class="page">
+<h3>گزارشات مالی</h3>
+<div class="card">
+<label>از تاریخ</label><input type="date" id="rFrom">
+<label>تا تاریخ</label><input type="date" id="rTo">
+<button class="btn" onclick="renderReports()">نمایش گزارش</button>
+<div id="reportResult"></div>
+</div>
+<div class="card"><h3>گزارش ماهانه</h3><div id="monthlyReport"></div></div>
+</section>
+
+<section id="settings" class="page">
+<h3>تنظیمات شرکت</h3>
+<div class="card">
+<label>نام شرکت</label><input id="sCompany">
+<label>شماره تماس</label><input id="sPhone">
+<label>آدرس</label><input id="sAddress">\n<label>شعار شرکت</label><input id="sSlogan">
+<label>واحد پول</label>
+<select id="sCurrency">
+<option value="AFN">افغانی AFN</option>
+<option value="USD">دالر USD</option>
+<option value="EUR">یورو EUR</option>
+<option value="PKR">کلدار PKR</option>
+</select>
+<label>پیشوند فاکتور</label><input id="sPrefix">
+<label>شماره بعدی فاکتور</label><input id="sNext" type="number" min="1">
+<button class="btn green" onclick="saveSettings()">ذخیره تنظیمات</button>
+</div>
+</section>
+
+<section id="backup" class="page">
+<h3>پشتیبان‌گیری و بازیابی</h3>
+<div class="card">
+<button class="btn green" onclick="downloadBackup()">دریافت فایل پشتیبان</button>
+<hr>
+<label>انتخاب فایل پشتیبان</label>
+<input type="file" id="restoreFile" accept=".json,application/json">
+<button class="btn orange" onclick="restoreBackup()">بازیابی اطلاعات</button>
+<div class="notice">توجه: بازیابی پشتیبان، اطلاعات فعلی را جایگزین می‌کند.</div>
+</div>
+</section>
+
+<section id="invoicePrint" class="page">
+<div id="invoiceContent"></div>
+<div class="actions no-print">
+<button class="btn" onclick="window.print()">چاپ فاکتور</button>
+<button class="btn green" onclick="downloadInvoiceImage()">دریافت تصویر فاکتور HD</button>
+<button class="btn" style="background:#16834d" onclick="shareInvoiceWhatsApp()">ارسال فاکتور در واتساپ</button>
+<button class="btn gray" onclick="showPage('invoices')">بازگشت</button>
+</div>
+</section>
+
+<section id="receiptPrint" class="page">
+<div id="receiptContent"></div>
+<div class="actions no-print">
+<button class="btn" onclick="window.print()">چاپ رسید</button>
+<button class="btn green" onclick="downloadReceiptImage()">دریافت تصویر رسید HD</button>
+<button class="btn" style="background:#16834d" onclick="shareReceiptWhatsApp()">ارسال رسید در واتساپ</button>
+<button class="btn gray" onclick="showPage('ledger')">بازگشت</button>
+</div>
+</section>
+
+</main>
+<footer>RBC Company Management System</footer>
+
+<script>
+const KEY='RBC_COMPANY_DATA_V1';
+
+function initialDB(){
+ return {
+ customers:[],products:[],sales:[],payments:[],expenses:[],
+ settings:{
+ company_name:'RBC Company',
+ company_phone:'0702055715',company_address:'کابل‌تاور، کابل، افغانستان',
+ company_slogan:'باهم برای آینده بهتر',
+ currency:'AFN',invoice_prefix:'RBC-',
+ next_invoice_number:1
+ }
+ };
+}
+
+function loadDB(){
+ try{
+ let d=JSON.parse(localStorage.getItem(KEY));
+ if(!d||typeof d!=='object')return initialDB();
+ let b=initialDB();
+ return {...b,...d,
+ customers:Array.isArray(d.customers)?d.customers:[],
+ products:Array.isArray(d.products)?d.products:[],
+ sales:Array.isArray(d.sales)?d.sales:[],
+ payments:Array.isArray(d.payments)?d.payments:[],
+ expenses:Array.isArray(d.expenses)?d.expenses:[],
+ settings:{...b.settings,...(d.settings||{})}
+ };
+ }catch(e){return initialDB();}
+}
+
+let db=loadDB();
+let cart=[];
+let currentInvoiceId=null;
+let currentReceiptId=null;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function $(id){return document.getElementById(id)}
+function num(v){return Math.max(0,Number(v)||0)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function today(){
+ let d=new Date();
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function money(v){return num(v).toLocaleString('en-US')+' '+(db.settings.currency||'AFN')}
+function esc(s){
+ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ $(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ if(id==='home')renderDashboard();
+ if(id==='customers')renderCustomers();
+ if(id==='products')renderProducts();
+ if(id==='sales')prepareSale();
+ if(id==='ledger')prepareLedger();
+ if(id==='invoices')renderInvoices();
+ if(id==='accounting')renderAccounting();
+ if(id==='expenses')renderExpenses();
+ if(id==='reports'){
+  if(!$('rFrom').value)$('rFrom').value=today().slice(0,8)+'01';
+  if(!$('rTo').value)$('rTo').value=today();
+  renderReports();
+ }
+ if(id==='settings')loadSettings();
+}
+
+function customerName(id){
+ return db.customers.find(x=>x.id===id)?.name||'مشتری حذف‌شده';
+}
+function customerSales(id){
+ return db.sales.filter(s=>s.customerId===id).reduce((a,s)=>a+num(s.total),0);
+}
+function customerPayments(id){
+ return db.payments.filter(p=>p.customerId===id).reduce((a,p)=>a+num(p.amount),0);
+}
+function customerBalance(id){
+ return customerSales(id)-
+ db.sales.filter(s=>s.customerId===id).reduce((a,s)=>a+num(s.paid),0)-
+ customerPayments(id);
+}
+function totalSales(){return db.sales.reduce((a,s)=>a+num(s.total),0)}
+function totalPaid(){
+ return db.sales.reduce((a,s)=>a+num(s.paid),0)+
+ db.payments.reduce((a,p)=>a+num(p.amount),0);
+}
+function totalDebt(){
+ return db.customers.reduce((a,c)=>a+Math.max(0,customerBalance(c.id)),0);
+}
+function totalExpenses(){return db.expenses.reduce((a,e)=>a+num(e.amount),0)}
+function grossProfit(){
+ return db.sales.reduce((a,s)=>a+num(s.totalBeforeDiscount)-num(s.costTotal),0);
+}
+function netProfit(){return grossProfit()-totalExpenses()}
+
+function table(headers,rows){
+ return '<div class="table-wrap"><table><thead><tr>'+
+ headers.map(x=>'<th>'+x+'</th>').join('')+
+ '</tr></thead><tbody>'+
+ rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+
+ '</tbody></table></div>';
+}
+
+/* DASHBOARD */
+function renderDashboard(){
+ $('headerName').textContent=db.settings.company_name||'RBC Company';
+ $('dSales').textContent=money(totalSales());
+ $('dPaid').textContent=money(totalPaid());
+ $('dDebt').textContent=money(totalDebt());
+ $('dProfit').textContent=money(grossProfit());
+ $('dExpenses').textContent=money(totalExpenses());
+ $('dNet').textContent=money(netProfit());
+ $('dCustomers').textContent=db.customers.length;
+ $('dProducts').textContent=db.products.length;
+ let list=[...db.sales].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
+ $('recentSales').innerHTML=list.length?table(
+ ['فاکتور','مشتری','تاریخ','مبلغ'],
+ list.map(s=>[esc(s.invoiceNo),esc(customerName(s.customerId)),esc(s.date),money(s.total)])
+ ):'<div class="empty">هنوز فاکتوری ثبت نشده است.</div>';
+}
+
+/* CUSTOMERS */
+function clearCustomer(){
+ ['cId','cName','cPhone','cAddress','cNote'].forEach(x=>$(x).value='');
+}
+function saveCustomer(){
+ let name=$('cName').value.trim();
+ if(!name)return alert('نام مشتری را وارد کنید.');
+ let id=$('cId').value;
+ let obj={id:id||uid(),name,phone:$('cPhone').value.trim(),
+ address:$('cAddress').value.trim(),note:$('cNote').value.trim()};
+ if(id){
+  let i=db.customers.findIndex(x=>x.id===id);
+  if(i>=0)db.customers[i]=obj;
+ }else db.customers.push(obj);
+ save();clearCustomer();renderCustomers();refreshSelectors();
+ alert('مشتری ذخیره شد.');
+}
+function editCustomer(id){
+ let c=db.customers.find(x=>x.id===id);if(!c)return;
+ $('cId').value=c.id;$('cName').value=c.name;
+ $('cPhone').value=c.phone||'';$('cAddress').value=c.address||'';
+ $('cNote').value=c.note||'';
+ window.scrollTo(0,0);
+}
+function deleteCustomer(id){
+ if(db.sales.some(s=>s.customerId===id)||db.payments.some(p=>p.customerId===id))
+  return alert('این مشتری سابقه مالی دارد و قابل حذف نیست.');
+ if(confirm('مشتری حذف شود؟')){
+  db.customers=db.customers.filter(c=>c.id!==id);
+  save();renderCustomers();refreshSelectors();
+ }
+}
+function renderCustomers(){
+ let q=$('cSearch').value.trim().toLowerCase();
+ let list=db.customers.filter(c=>(c.name+' '+c.phone).toLowerCase().includes(q));
+ $('customerList').innerHTML=list.length?table(
+ ['نام','تماس','مجموع خرید','باقی‌داری','عملیات'],
+ list.map(c=>[
+ esc(c.name),esc(c.phone),money(customerSales(c.id)),
+ money(customerBalance(c.id)),
+ '<div class="actions"><button class="btn small" onclick="editCustomer(\''+c.id+'\')">ویرایش</button><button class="btn red small" onclick="deleteCustomer(\''+c.id+'\')">حذف</button></div>'
+ ])
+ ):'<div class="empty">مشتری یافت نشد.</div>';
+}
+
+/* PRODUCTS */
+function clearProduct(){
+ ['pId','pName','pCategory','pBuy','pSell','pStock'].forEach(x=>$(x).value='');
+}
+function saveProduct(){
+ let name=$('pName').value.trim();
+ if(!name)return alert('نام جنس را وارد کنید.');
+ let id=$('pId').value;
+ let obj={id:id||uid(),name,category:$('pCategory').value.trim(),
+ buy:num($('pBuy').value),sell:num($('pSell').value),stock:num($('pStock').value)};
+ if(id){
+  let i=db.products.findIndex(x=>x.id===id);
+  if(i>=0)db.products[i]=obj;
+ }else db.products.push(obj);
+ save();clearProduct();renderProducts();refreshSelectors();
+ alert('جنس ذخیره شد.');
+}
+function editProduct(id){
+ let p=db.products.find(x=>x.id===id);if(!p)return;
+ $('pId').value=p.id;$('pName').value=p.name;
+ $('pCategory').value=p.category||'';
+ $('pBuy').value=p.buy;$('pSell').value=p.sell;$('pStock').value=p.stock;
+ window.scrollTo(0,0);
+}
+function deleteProduct(id){
+ if(db.sales.some(s=>s.items.some(i=>i.productId===id)))
+  return alert('این جنس در فاکتورها استفاده شده و قابل حذف نیست.');
+ if(confirm('جنس حذف شود؟')){
+  db.products=db.products.filter(p=>p.id!==id);
+  save();renderProducts();refreshSelectors();
+ }
+}
+function renderProducts(){
+ let q=$('pSearch').value.trim().toLowerCase();
+ let list=db.products.filter(p=>(p.name+' '+(p.category||'')).toLowerCase().includes(q));
+ $('productList').innerHTML=list.length?table(
+ ['جنس','دسته‌بندی','خرید','فروش','موجودی','عملیات'],
+ list.map(p=>[
+ esc(p.name),esc(p.category),money(p.buy),money(p.sell),p.stock,
+ '<div class="actions"><button class="btn small" onclick="editProduct(\''+p.id+'\')">ویرایش</button><button class="btn red small" onclick="deleteProduct(\''+p.id+'\')">حذف</button></div>'
+ ])
+ ):'<div class="empty">جنس یافت نشد.</div>';
+}
+
+/* SELECTORS AND SALES */
+function refreshSelectors(){
+ let oldC=$('saleCustomer').value;
+ let oldL=$('ledgerCustomer').value;
+ $('saleCustomer').innerHTML='<option value="">انتخاب مشتری</option>'+
+ db.customers.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+ $('ledgerCustomer').innerHTML='<option value="">انتخاب مشتری</option>'+
+ db.customers.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+ if(db.customers.some(c=>c.id===oldC))$('saleCustomer').value=oldC;
+ if(db.customers.some(c=>c.id===oldL))$('ledgerCustomer').value=oldL;
+ $('saleProduct').innerHTML='<option value="">انتخاب جنس</option>'+
+ db.products.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' — موجودی '+p.stock+'</option>').join('');
+}
+function prepareSale(){
+ refreshSelectors();
+ if(!$('saleDate').value)$('saleDate').value=today();
+ renderSaleItems();
+}
+function addSaleItem(){
+ let id=$('saleProduct').value;
+ let qty=num($('saleQty').value);
+ let p=db.products.find(x=>x.id===id);
+ if(!p)return alert('جنس را انتخاب کنید.');
+ if(qty<1)return alert('تعداد درست نیست.');
+ let old=cart.find(x=>x.productId===id);
+ let current=old?old.qty:0;
+ if(current+qty>p.stock)return alert('موجودی کافی نیست.');
+ if(old)old.qty+=qty;
+ else cart.push({productId:p.id,name:p.name,qty,price:p.sell,buy:p.buy});
+ $('saleQty').value=1;renderSaleItems();
+}
+function renderSaleItems(){
+ let subtotal=cart.reduce((a,i)=>a+i.qty*i.price,0);
+ let discount=num($('saleDiscount').value);
+ let total=Math.max(0,subtotal-discount);
+ $('saleTotal').textContent='مجموع: '+money(total);
+ $('saleItems').innerHTML=cart.length?cart.map((i,n)=>
+ '<div class="product-row"><b>'+esc(i.name)+'</b><br>تعداد: '+i.qty+
+ ' | قیمت: '+money(i.price)+' | مجموع: '+money(i.qty*i.price)+
+ '<br><button class="btn red small" onclick="removeCartItem('+n+')">حذف</button></div>'
+ ).join(''):'<div class="empty">هنوز جنسی اضافه نشده است.</div>';
+}
+function removeCartItem(n){cart.splice(n,1);renderSaleItems()}
+function completeSale(){
+ let customerId=$('saleCustomer').value;
+ if(!customerId)return alert('مشتری را انتخاب کنید.');
+ if(!cart.length)return alert('حداقل یک جنس اضافه کنید.');
+ for(let i of cart){
+  let p=db.products.find(x=>x.id===i.productId);
+  if(!p||p.stock<i.qty)return alert('موجودی جنس '+i.name+' کافی نیست.');
+ }
+ let subtotal=cart.reduce((a,i)=>a+i.qty*i.price,0);
+ let discount=num($('saleDiscount').value);
+ if(discount>subtotal)return alert('تخفیف از مجموع فروش بیشتر است.');
+ let total=subtotal-discount;
+ let paid=num($('salePaid').value);
+ if(paid>total)return alert('پرداخت بیشتر از مبلغ فاکتور است.');
+ let previousBalance=customerBalance(customerId);
+ let number=num(db.settings.next_invoice_number)||1;
+ let invoiceNo=(db.settings.invoice_prefix||'RBC-')+String(number).padStart(5,'0');
+ let sale={
+  id:uid(),invoiceNo,customerId,date:$('saleDate').value||today(),
+  items:cart.map(i=>({...i})),totalBeforeDiscount:subtotal,
+  discount,total,costTotal:cart.reduce((a,i)=>a+i.qty*i.buy,0),
+  paid,previousBalance,createdAt:Date.now()
+ };
+ cart.forEach(i=>db.products.find(p=>p.id===i.productId).stock-=i.qty);
+ db.sales.push(sale);
+ db.settings.next_invoice_number=number+1;
+ save();cart=[];
+ $('saleDiscount').value=0;$('salePaid').value=0;
+ renderAll();showInvoice(sale.id);
+}
+
+/* INVOICES */
+function invoicePaid(s){
+ return num(s.paid)+db.payments.filter(p=>p.invoiceId===s.id).reduce((a,p)=>a+num(p.amount),0);
+}
+function renderInvoices(){
+ let q=$('iSearch').value.trim().toLowerCase();
+ let list=[...db.sales].sort((a,b)=>b.createdAt-a.createdAt)
+ .filter(s=>(s.invoiceNo+' '+customerName(s.customerId)).toLowerCase().includes(q));
+ $('invoiceList').innerHTML=list.length?table(
+ ['شماره','مشتری','تاریخ','مبلغ','پرداخت','باقی','عملیات'],
+ list.map(s=>[
+ esc(s.invoiceNo),esc(customerName(s.customerId)),esc(s.date),
+ money(s.total),money(invoicePaid(s)),
+ money(Math.max(0,s.total-invoicePaid(s))),
+ '<button class="btn small" onclick="showInvoice(\''+s.id+'\')">مشاهده</button>'
+ ])
+ ):'<div class="empty">فاکتوری موجود نیست.</div>';
+}
+function showInvoice(id){
+ let s=db.sales.find(x=>x.id===id);if(!s)return;
+ currentInvoiceId=id;
+ let c=db.customers.find(x=>x.id===s.customerId);
+ let previous=num(s.previousBalance);
+ let due=previous+num(s.total);
+ let paid=invoicePaid(s);
+ let remaining=Math.max(0,due-paid);
+ $('invoiceContent').innerHTML=`
+ <div style="max-width:850px;margin:auto;padding:0 24px 30px;background:white;font-family:Tahoma,Arial">
+ <div style="background:#19458f;color:white;padding:28px 30px;display:flex;justify-content:space-between;align-items:center;gap:15px">
+ <div><div style="font-size:25px">INVOICE</div><div style="margin-top:12px;font-size:19px">${esc(s.invoiceNo)}</div></div>
+ <div style="font-size:34px;font-weight:bold">${esc(db.settings.company_name||'RBC Company')}</div>
+ </div>
+ <div style="text-align:right;padding:25px 8px 12px;color:#26364b;font-size:17px">
+ <p>مشتری: <b>${esc(c?.name||'')}</b></p><p>تاریخ: ${esc(s.date)}</p>
+ <p>شماره تماس: ${esc(db.settings.company_phone||'0702055715')}</p>
+ <p>آدرس: ${esc(db.settings.company_address||'کابل‌تاور، کابل، افغانستان')}</p>
+ </div>
+ ${table(['جنس','تعداد','قیمت واحد','مجموع'],s.items.map(i=>[
+ esc(i.name),i.qty,money(i.price),money(i.qty*i.price)
+ ]))}
+ <div style="max-width:510px;margin:28px 0 15px auto;background:#f0f4fc;border-radius:12px;padding:22px;text-align:right;line-height:2.1;font-size:17px">
+ <div>مجموع اجناس: ${money(s.totalBeforeDiscount)}</div>
+ <div>تخفیف: ${money(s.discount)}</div>
+ <div>مبلغ فاکتور: <b>${money(s.total)}</b></div>
+ <div>مانده قبلی حساب: ${money(previous)}</div>
+ <div style="font-weight:bold;color:#19458f">مجموع قابل پرداخت: ${money(due)}</div>
+ <div>پرداخت‌شده: ${money(paid)}</div>
+ <div style="font-weight:bold;color:#a52d35;font-size:21px">مانده نهایی حساب: ${money(remaining)}</div>
+ </div>
+ <p style="text-align:center;color:#68778a;padding:12px">${esc(db.settings.company_slogan||'باهم برای آینده بهتر')}</p>
+ <p style="text-align:center;color:#68778a">تشکر از خرید شما</p>
+ </div>`;
+ $('invoicePrint').classList.add('active');
+ document.querySelectorAll('.page').forEach(p=>{if(p.id!=='invoicePrint')p.classList.remove('active');});
+}
+
+function invoiceCanvas(){
+ let s=db.sales.find(x=>x.id===currentInvoiceId);if(!s)return null;
+ let c=db.customers.find(x=>x.id===s.customerId);
+ const W=1200, headerH=220, rowH=78, bodyStart=390;
+ const previous=num(s.previousBalance), due=previous+num(s.total), paid=invoicePaid(s), remaining=Math.max(0,due-paid);
+ const H=Math.max(1250,bodyStart+s.items.length*rowH+690);
+ let canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+ let ctx=canvas.getContext('2d');
+ ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+ // سربرگ آبی مشابه نمونه ارسالی
+ ctx.fillStyle='#19458f';ctx.fillRect(0,0,W,headerH);
+ ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='42px Tahoma';ctx.fillText('INVOICE',70,82);
+ ctx.font='27px Tahoma';ctx.fillText(s.invoiceNo,70,145);
+ ctx.textAlign='right';ctx.font='bold 54px Tahoma';ctx.fillText(db.settings.company_name||'RBC Company',1130,105);
+ ctx.direction='rtl';ctx.textAlign='right';ctx.fillStyle='#26364b';ctx.font='30px Tahoma';
+ let y=290;
+ ctx.fillText('مشتری: '+(c?.name||''),1120,y);y+=58;
+ ctx.fillText('تاریخ: '+s.date,1120,y);y+=58;
+ ctx.font='25px Tahoma';ctx.fillStyle='#536174';
+ ctx.fillText('تماس: '+(db.settings.company_phone||'0702055715'),1120,y);y+=48;
+ ctx.fillText('آدرس: '+(db.settings.company_address||'کابل‌تاور، کابل، افغانستان'),1120,y);
+ y+=80;
+ // عنوان جدول
+ ctx.fillStyle='#eaf0fb';roundRect(ctx,55,y-42,1090,66,12);ctx.fill();
+ ctx.fillStyle='#173c68';ctx.font='bold 25px Tahoma';
+ ctx.textAlign='right';ctx.fillText('جنس',1080,y);
+ ctx.textAlign='center';ctx.fillText('تعداد',730,y);ctx.fillText('قیمت واحد',460,y);
+ ctx.textAlign='left';ctx.fillText('مجموع',115,y);
+ y+=70;ctx.font='24px Tahoma';ctx.fillStyle='#202b3c';
+ s.items.forEach((it,idx)=>{
+  ctx.strokeStyle='#e5eaf1';ctx.beginPath();ctx.moveTo(55,y-32);ctx.lineTo(1145,y-32);ctx.stroke();
+  ctx.direction='rtl';ctx.textAlign='right';ctx.fillText(String(it.name),1080,y);
+  ctx.textAlign='center';ctx.fillText(String(it.qty),730,y);ctx.fillText(money(it.price),460,y);
+  ctx.textAlign='left';ctx.fillText(money(it.qty*it.price),115,y);y+=rowH;
+ });
+ y+=35;
+ const boxH=440;ctx.fillStyle='#f0f4fc';roundRect(ctx,490,y,655,boxH,18);ctx.fill();
+ y+=65;ctx.direction='rtl';ctx.textAlign='right';ctx.fillStyle='#354256';ctx.font='25px Tahoma';
+ const lines=[
+  ['مجموع اجناس: '+money(s.totalBeforeDiscount),'normal'],
+  ['تخفیف: '+money(s.discount),'normal'],
+  ['مبلغ فاکتور: '+money(s.total),'normal'],
+  ['مانده قبلی حساب: '+money(previous),'normal'],
+  ['مجموع قابل پرداخت: '+money(due),'blue'],
+  ['پرداخت‌شده: '+money(paid),'normal'],
+  ['مانده نهایی حساب: '+money(remaining),'red']
+ ];
+ lines.forEach(([t,kind])=>{ctx.fillStyle=kind==='blue'?'#19458f':kind==='red'?'#a52d35':'#354256';ctx.font=(kind==='normal'?'25px':'bold 29px')+' Tahoma';ctx.fillText(t,1100,y);y+=52;});
+ y+=100;ctx.textAlign='center';ctx.fillStyle='#68778a';ctx.font='27px Tahoma';
+ ctx.fillText(db.settings.company_slogan||'باهم برای آینده بهتر',600,y);y+=52;
+ ctx.font='23px Tahoma';ctx.fillText('تشکر از خرید شما',600,y);
+ return canvas;
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function canvasBlob(canvas){return new Promise(resolve=>canvas.toBlob(resolve,'image/png'));}
+function saveBlob(blob,name){if(!blob)return alert('ساخت تصویر موفق نشد.');let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+async function downloadInvoiceImage(){let s=db.sales.find(x=>x.id===currentInvoiceId);let cv=invoiceCanvas();if(!s||!cv)return;saveBlob(await canvasBlob(cv),s.invoiceNo+'.png');}
+async function shareImageToWhatsApp(blob,name,caption){
+ if(!blob)return alert('ساخت تصویر موفق نشد.');
+ const file=new File([blob],name,{type:'image/png'});
+ if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file],title:'RBC Company',text:caption});}
+  catch(e){if(e.name!=='AbortError')alert('ارسال مستقیم ممکن نشد. تصویر را ذخیره کنید و در واتساپ پیوست نمایید.');}
+ }else{
+  saveBlob(blob,name);
+  alert('مرورگر شما ارسال مستقیم تصویر را پشتیبانی نمی‌کند. تصویر ذخیره شد؛ آن را در واتساپ از بخش پیوست > گالری ارسال کنید.');
+ }
+}
+async function shareInvoiceWhatsApp(){
+ let s=db.sales.find(x=>x.id===currentInvoiceId);let cv=invoiceCanvas();if(!s||!cv)return;
+ await shareImageToWhatsApp(await canvasBlob(cv),s.invoiceNo+'.png','فاکتور '+s.invoiceNo+' - RBC Company');
+}
+
+/* LEDGER */
+function prepareLedger(){refreshSelectors();renderLedger()}
+function addCustomerPayment(){
+ let id=$('ledgerCustomer').value;
+ let amount=num($('paymentAmount').value);
+ if(!id)return alert('مشتری را انتخاب کنید.');
+ if(amount<=0)return alert('مبلغ پرداخت را وارد کنید.');
+ let balance=customerBalance(id);
+ if(balance<=0)return alert('این مشتری قرض ندارد.');
+ if(amount>balance)return alert('مبلغ پرداخت از باقی‌داری بیشتر است.');
+ let paymentId=uid();
+ db.payments.push({
+ id:paymentId,customerId:id,amount,
+ date:$('paymentDate').value||today(),
+ note:$('paymentNote').value.trim(),
+ previousBalance:balance,newBalance:Math.max(0,balance-amount),
+ createdAt:Date.now()
+ });
+ save();$('paymentAmount').value='';$('paymentNote').value='';
+ renderLedger();renderAll();showReceipt(paymentId);
+}
+function showReceipt(id){
+ let p=db.payments.find(x=>x.id===id);if(!p)return;
+ currentReceiptId=id;
+ let c=db.customers.find(x=>x.id===p.customerId);
+ let previous=Number.isFinite(Number(p.previousBalance))?num(p.previousBalance):num(p.newBalance)+num(p.amount);
+ $('receiptContent').innerHTML=`
+ <div style="max-width:850px;margin:auto;padding:0 24px 30px;background:white;font-family:Tahoma,Arial">
+ <div style="background:#19458f;color:white;padding:30px;display:flex;justify-content:space-between;align-items:center;gap:15px">
+ <div style="font-size:25px">PAYMENT RECEIPT</div><div style="font-size:34px;font-weight:bold">${esc(db.settings.company_name||'RBC Company')}</div>
+ </div>
+ <div style="text-align:right;padding:25px 8px;line-height:2;font-size:18px">
+ <h3 style="color:#19458f">رسید دریافت پول</h3>
+ <p>شماره رسید: ${esc(p.id.slice(-8))}</p>
+ <p>نام مشتری: ${esc(c?.name||'')}</p><p>تاریخ: ${esc(p.date)}</p>
+ <p>شماره فاکتور مرتبط: ${esc(p.invoiceNo||'پرداخت به حساب عمومی مشتری')}</p>
+ </div>
+ <div style="background:#eaf0fb;border-radius:12px;padding:24px;text-align:right;font-size:23px;font-weight:bold;color:#19458f">
+ مبلغ دریافتی: ${money(p.amount)}
+ </div>
+ <div style="text-align:right;padding:22px;line-height:2;font-size:19px">
+ <p>مانده حساب قبل از پرداخت: ${money(previous)}</p>
+ <p style="font-weight:bold;color:#19458f">مانده حساب جدید: ${money(p.newBalance)}</p>
+ <p>یادداشت: ${esc(p.note||'—')}</p>
+ </div>
+ <p style="text-align:center;color:#68778a;padding:15px">${esc(db.settings.company_slogan||'باهم برای آینده بهتر')}</p>
+ <p style="text-align:center;color:#68778a">با تشکر از پرداخت شما</p>
+ <p style="text-align:center;color:#68778a">${esc(db.settings.company_phone||'0702055715')} | ${esc(db.settings.company_address||'کابل‌تاور، کابل، افغانستان')}</p>
+ </div>`;
+ $('receiptPrint').classList.add('active');
+ document.querySelectorAll('.page').forEach(x=>{if(x.id!=='receiptPrint')x.classList.remove('active');});
+}
+function receiptCanvas(){
+ let p=db.payments.find(x=>x.id===currentReceiptId);if(!p)return null;
+ let c=db.customers.find(x=>x.id===p.customerId);let previous=Number.isFinite(Number(p.previousBalance))?num(p.previousBalance):num(p.newBalance)+num(p.amount);
+ const W=1200,H=1350;let canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+ let ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#19458f';ctx.fillRect(0,0,W,220);
+ ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='42px Tahoma';ctx.fillText('PAYMENT RECEIPT',70,85);
+ ctx.textAlign='right';ctx.font='bold 54px Tahoma';ctx.fillText(db.settings.company_name||'RBC Company',1130,115);
+ ctx.direction='rtl';ctx.textAlign='right';ctx.fillStyle='#19458f';ctx.font='bold 34px Tahoma';ctx.fillText('رسید دریافت پول',1110,315);
+ ctx.fillStyle='#354256';ctx.font='28px Tahoma';let y=405;
+ ['شماره رسید: '+p.id.slice(-8),'نام مشتری: '+(c?.name||''),'تاریخ: '+p.date,'فاکتور مرتبط: '+(p.invoiceNo||'پرداخت به حساب عمومی مشتری')].forEach(t=>{ctx.fillText(t,1110,y);y+=68;});
+ y+=20;ctx.fillStyle='#eaf0fb';roundRect(ctx,55,y,1090,125,18);ctx.fill();
+ ctx.fillStyle='#19458f';ctx.font='bold 38px Tahoma';ctx.fillText('مبلغ دریافتی: '+money(p.amount),1090,y+78);
+ y+=190;ctx.fillStyle='#354256';ctx.font='29px Tahoma';ctx.fillText('مانده حساب قبل از پرداخت: '+money(previous),1110,y);y+=78;
+ ctx.fillStyle='#19458f';ctx.font='bold 34px Tahoma';ctx.fillText('مانده حساب جدید: '+money(p.newBalance),1110,y);y+=78;
+ ctx.fillStyle='#354256';ctx.font='27px Tahoma';ctx.fillText('یادداشت: '+(p.note||'—'),1110,y);
+ ctx.textAlign='center';ctx.fillStyle='#68778a';ctx.font='29px Tahoma';ctx.fillText(db.settings.company_slogan||'باهم برای آینده بهتر',600,1160);
+ ctx.font='24px Tahoma';ctx.fillText('با تشکر از پرداخت شما',600,1215);
+ ctx.fillText((db.settings.company_phone||'0702055715')+' | '+(db.settings.company_address||'کابل‌تاور، کابل، افغانستان'),600,1270);
+ return canvas;
+}
+async function downloadReceiptImage(){let p=db.payments.find(x=>x.id===currentReceiptId);let cv=receiptCanvas();if(!p||!cv)return;saveBlob(await canvasBlob(cv),'Receipt-'+p.id+'.png');}
+async function shareReceiptWhatsApp(){let p=db.payments.find(x=>x.id===currentReceiptId);let cv=receiptCanvas();if(!p||!cv)return;await shareImageToWhatsApp(await canvasBlob(cv),'Receipt-'+p.id+'.png','رسید پرداخت RBC Company');}
+
+function deletePayment(id){
+ if(!confirm('این پرداخت حذف شود؟'))return;
+ db.payments=db.payments.filter(p=>p.id!==id);
+ save();renderLedger();renderAll();
+}
+function renderLedger(){
+ let id=$('ledgerCustomer').value;
+ if(!id){
+  $('ledgerSummary').innerHTML='';
+  $('ledgerList').innerHTML='<div class="empty">مشتری را انتخاب کنید.</div>';
+  return;
+ }
+ let sales=db.sales.filter(s=>s.customerId===id);
+ let payments=db.payments.filter(p=>p.customerId===id);
+ $('ledgerSummary').innerHTML=`
+ <div class="grid">
+ <div class="stat"><small>مجموع خرید</small><strong>${money(customerSales(id))}</strong></div>
+ <div class="stat"><small>پرداخت اولیه</small><strong>${money(sales.reduce((a,s)=>a+num(s.paid),0))}</strong></div>
+ <div class="stat"><small>پرداخت‌های بعدی</small><strong>${money(customerPayments(id))}</strong></div>
+ <div class="stat"><small>باقی‌داری</small><strong>${money(customerBalance(id))}</strong></div>
+ </div>`;
+ let rows=[];
+ sales.forEach(s=>rows.push([esc(s.date),'فروش '+esc(s.invoiceNo),money(s.total),'']));
+ payments.forEach(p=>rows.push([
+ esc(p.date),'پرداخت '+esc(p.note),money(p.amount),
+ '<button class="btn red small" onclick="deletePayment(\''+p.id+'\')">حذف</button>'
+ ]));
+ rows.sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
+ $('ledgerList').innerHTML=rows.length?table(['تاریخ','شرح','مبلغ','عملیات'],rows):'<div class="empty">سابقه‌ای موجود نیست.</div>';
+}
+
+/* ACCOUNTING */
+function renderAccounting(){
+ $('aSales').textContent=money(totalSales());
+ $('aPaid').textContent=money(totalPaid());
+ $('aDebt').textContent=money(totalDebt());
+ $('aNet').textContent=money(netProfit());
+}
+
+/* EXPENSES */
+function saveExpense(){
+ let name=$('eName').value.trim();
+ let amount=num($('eAmount').value);
+ if(!name||amount<=0)return alert('عنوان و مبلغ هزینه را وارد کنید.');
+ let id=$('eId').value;
+ let obj={id:id||uid(),name,amount,
+ category:$('eCategory').value.trim(),date:$('eDate').value||today()};
+ if(id){
+  let i=db.expenses.findIndex(e=>e.id===id);
+  if(i>=0)db.expenses[i]=obj;
+ }else db.expenses.push(obj);
+ save();
+ ['eId','eName','eAmount','eCategory'].forEach(x=>$(x).value='');
+ $('eDate').value=today();renderExpenses();renderAll();
+ alert('هزینه ثبت شد.');
+}
+function editExpense(id){
+ let e=db.expenses.find(x=>x.id===id);if(!e)return;
+ $('eId').value=e.id;$('eName').value=e.name;
+ $('eAmount').value=e.amount;$('eCategory').value=e.category;
+ $('eDate').value=e.date;window.scrollTo(0,0);
+}
+function deleteExpense(id){
+ if(!confirm('هزینه حذف شود؟'))return;
+ db.expenses=db.expenses.filter(e=>e.id!==id);
+ save();renderExpenses();renderAll();
+}
+function renderExpenses(){
+ let list=[...db.expenses].sort((a,b)=>b.date.localeCompare(a.date));
+ $('expenseList').innerHTML=list.length?table(
+ ['عنوان','دسته‌بندی','تاریخ','مبلغ','عملیات'],
+ list.map(e=>[
+ esc(e.name),esc(e.category),esc(e.date),money(e.amount),
+ '<div class="actions"><button class="btn small" onclick="editExpense(\''+e.id+'\')">ویرایش</button><button class="btn red small" onclick="deleteExpense(\''+e.id+'\')">حذف</button></div>'
+ ])
+ ):'<div class="empty">هزینه‌ای ثبت نشده است.</div>';
+}
+
+/* REPORTS */
+function rangeFilter(items,from,to,field){
+ return items.filter(x=>(!from||x[field]>=from)&&(!to||x[field]<=to));
+}
+function renderReports(){
+ let from=$('rFrom').value,to=$('rTo').value;
+ let sales=rangeFilter(db.sales,from,to,'date');
+ let expenses=rangeFilter(db.expenses,from,to,'date');
+ let amount=sales.reduce((a,s)=>a+num(s.total),0);
+ let cost=sales.reduce((a,s)=>a+num(s.costTotal),0);
+ let exp=expenses.reduce((a,e)=>a+num(e.amount),0);
+ $('reportResult').innerHTML=`
+ <div class="grid">
+ <div class="stat"><small>تعداد فاکتورها</small><strong>${sales.length}</strong></div>
+ <div class="stat"><small>مجموع فروش</small><strong>${money(amount)}</strong></div>
+ <div class="stat"><small>قیمت تمام‌شده</small><strong>${money(cost)}</strong></div>
+ <div class="stat"><small>سود ناخالص</small><strong>${money(amount-cost)}</strong></div>
+ <div class="stat"><small>هزینه‌ها</small><strong>${money(exp)}</strong></div>
+ <div class="stat"><small>سود خالص</small><strong>${money(amount-cost-exp)}</strong></div>
+ </div>`;
+ renderMonthly();
+}
+function renderMonthly(){
+ let map={};
+ db.sales.forEach(s=>{
+  let m=(s.date||'').slice(0,7);
+  if(m)map[m]=(map[m]||0)+num(s.total);
+ });
+ let keys=Object.keys(map).sort().reverse();
+ $('monthlyReport').innerHTML=keys.length?table(
+ ['ماه','مجموع فروش'],keys.map(k=>[k,money(map[k])])
+ ):'<div class="empty">گزارش موجود نیست.</div>';
+}
+
+/* SETTINGS */
+function saveSettings(){
+ let next=Math.max(1,Math.floor(num($('sNext').value)));
+ let maxUsed=db.sales.reduce((m,s)=>{
+  let match=String(s.invoiceNo).match(/(\d+)$/);
+  return match?Math.max(m,Number(match[1])):m;
+ },0);
+ if(next<=maxUsed)return alert('شماره بعدی باید حداقل '+(maxUsed+1)+' باشد.');
+ db.settings={
+ company_name:$('sCompany').value.trim()||'RBC Company',
+ company_phone:$('sPhone').value.trim()||'0702055715',
+ company_address:$('sAddress').value.trim()||'کابل‌تاور، کابل، افغانستان',
+ company_slogan:$('sSlogan').value.trim()||'باهم برای آینده بهتر',
+ currency:$('sCurrency').value,
+ invoice_prefix:$('sPrefix').value.trim(),
+ next_invoice_number:next
+ };
+ save();renderAll();alert('تنظیمات ذخیره شد.');
+}
+function loadSettings(){
+ $('sCompany').value=db.settings.company_name||'';
+ $('sPhone').value=db.settings.company_phone||'';
+ $('sAddress').value=db.settings.company_address||'کابل‌تاور، کابل، افغانستان';
+ $('sSlogan').value=db.settings.company_slogan||'باهم برای آینده بهتر';
+ $('sCurrency').value=db.settings.currency||'AFN';
+ $('sPrefix').value=db.settings.invoice_prefix||'RBC-';
+ $('sNext').value=db.settings.next_invoice_number||1;
+}
+
+/* BACKUP */
+function downloadBackup(){
+ let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+ let a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='RBC_Backup_'+today()+'.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function restoreBackup(){
+ let f=$('restoreFile').files[0];
+ if(!f)return alert('فایل پشتیبان را انتخاب کنید.');
+ if(!confirm('اطلاعات فعلی با فایل پشتیبان جایگزین شود؟'))return;
+ let reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   let d=JSON.parse(reader.result);
+   if(!d||!Array.isArray(d.customers)||!Array.isArray(d.products)||!Array.isArray(d.sales))
+    throw new Error('Invalid backup');
+   let b=initialDB();
+   db={...b,...d,settings:{...b.settings,...(d.settings||{})}};
+   save();renderAll();refreshSelectors();
+   alert('بازیابی موفقانه انجام شد.');
+  }catch(e){alert('فایل پشتیبان معتبر نیست.');}
+ };
+ reader.readAsText(f);
+}
+
+/* START */
+function renderAll(){
+ renderDashboard();
+ renderCustomers();
+ renderProducts();
+ renderInvoices();
+ renderAccounting();
+ renderExpenses();
+ renderMonthly();
+ refreshSelectors();
+}
+
+$('saleDate').value=today();
+$('paymentDate').value=today();
+$('eDate').value=today();
+$('rFrom').value=today().slice(0,8)+'01';
+$('rTo').value=today();
+
+renderAll();
+loadSettings();
+</script>
+</body>
+</html>
